@@ -1,10 +1,12 @@
 // Require the necessary discord.js classes
-const { Client, Events, GatewayIntentBits } = require("discord.js");
+import { Client, Events, GatewayIntentBits } from "discord.js";
 
-const { DISCORD_CLIENT_TOKEN } = require("./config");
+import { DISCORD_CLIENT_TOKEN } from "./config.js";
 
-// Create a new client instance
-const client = new Client({
+import yogaLogger from "./services/yoga-logger.js";
+
+// Create a new discord client instance
+const discordClient = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
@@ -14,25 +16,11 @@ const client = new Client({
 
 // When the client is ready, run this code (only once)
 // We use 'c' for the event parameter to keep it separate from the already defined 'client'
-client.once(Events.ClientReady, (c) => {
+discordClient.once(Events.ClientReady, (c) => {
   console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
-// When there is a yoga log message, reply with
-client.on(Events.MessageCreate, async (message) => {
-  console.log({ message });
-  // Get channel
-  const channel = await client.channels.fetch(message.channelId);
-
-  // Ignore bot messages
-  if (message.author.bot) return;
-  // Ignore if not in yoga channel
-  if (channel.name.toLowerCase() !== "yoga") return;
-  // Ignore if message does not start with ✅
-  if (!message.content.trim().startsWith("✅")) return;
-
-  message.react("🏴‍☠️");
-});
+yogaLogger(discordClient);
 
 // Log in to Discord with your client's token
-client.login(DISCORD_CLIENT_TOKEN);
+discordClient.login(DISCORD_CLIENT_TOKEN);
