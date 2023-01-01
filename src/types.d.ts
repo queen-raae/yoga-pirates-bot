@@ -18,7 +18,7 @@ declare const tables: readonly [
         readonly defaultValue: "";
       },
       {
-        readonly name: "creationDate";
+        readonly name: "createdTimestamp";
         readonly type: "datetime";
         readonly notNull: true;
         readonly defaultValue: "2021-04-01T18:46:52.292Z";
@@ -28,6 +28,10 @@ declare const tables: readonly [
         readonly type: "datetime";
         readonly notNull: true;
         readonly defaultValue: "2021-01-01T18:47:57.127Z";
+      },
+      {
+        readonly name: "editedTimestamp";
+        readonly type: "datetime";
       }
     ];
   }
