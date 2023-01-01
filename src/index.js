@@ -1,9 +1,9 @@
 // Require the necessary discord.js classes
-const { Client, Events, GatewayIntentBits } = require("discord.js");
-const { addDays } = require("date-fns");
+import { Client, Events, GatewayIntentBits } from "discord.js";
+import { addDays } from "date-fns";
 
-const { DISCORD_CLIENT_TOKEN } = require("./config");
-const { getXataClient } = require("./xata");
+import { DISCORD_CLIENT_TOKEN } from "./config.js";
+import { getXataClient } from "./xata.js";
 
 // Create a new discord client instance
 const discordClient = new Client({

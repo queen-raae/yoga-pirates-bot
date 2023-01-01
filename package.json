@@ -4,6 +4,7 @@
   "main": "src/index.js",
   "author": "Jake Runzer",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "dev": "nodemon .",
     "start": "node .",
