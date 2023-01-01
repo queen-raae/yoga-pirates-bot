@@ -10,6 +10,8 @@
     "deploy": "node src/deploy-commands"
   },
   "dependencies": {
+    "@xata.io/client": "0.21.6",
+    "date-fns": "2.29.3",
     "discord.js": "14.7.1",
     "dotenv": "16.0.3"
   },
