@@ -2,11 +2,8 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 
 import { DISCORD_CLIENT_TOKEN } from "./config.js";
-import { getXataClient } from "./xata.js";
-import yogaLogger from "./services/yoga-logger.js";
 
-// Get the Xata client
-const xataClient = getXataClient();
+import yogaLogger from "./services/yoga-logger.js";
 
 // Create a new discord client instance
 const discordClient = new Client({
@@ -23,7 +20,7 @@ discordClient.once(Events.ClientReady, (c) => {
   console.log(`Ready! Logged in as ${c.user.tag}`);
 });
 
-yogaLogger({ discordClient, xataClient });
+yogaLogger(discordClient);
 
 // Log in to Discord with your client's token
 discordClient.login(DISCORD_CLIENT_TOKEN);
