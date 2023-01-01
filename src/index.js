@@ -1,60 +1,72 @@
-const { REST } = require("@discordjs/rest"); // Define REST.
-const { Routes } = require("discord-api-types/v9"); // Define Routes.
-const fs = require("fs"); // Define fs (file system).
-const { Client, Intents, Collection } = require("discord.js"); // Define Client, Intents, and Collection.
-const client = new Client({
-  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES],
-}); // Connect to our discord bot.
-const commands = new Collection(); // Where the bot (slash) commands will be stored.
-const commandarray = []; // Array to store commands for sending to the REST API.
-const token = process.env.DISCORD_TOKEN; // Token from Railway Env Variable.
-// Execute code when the "ready" client event is triggered.
-client.once("ready", () => {
-  const commandFiles = fs
-    .readdirSync("src/Commands")
-    .filter(file => file.endsWith(".js")); // Get and filter all the files in the "Commands" Folder.
+const fs = require("node:fs");
+const path = require("node:path");
+// Require the necessary discord.js classes
+const { Client, Events, Collection, GatewayIntentBits } = require("discord.js");
 
-  // Loop through the command files
-  for (const file of commandFiles) {
-    const command = require(`./Commands/${file}`); // Get and define the command file.
-    commands.set(command.data.name, command); // Set the command name and file for handler to use.
-    commandarray.push(command.data.toJSON()); // Push the command data to an array (for sending to the API).
+const { DISCORD_CLIENT_TOKEN } = require("./config");
+
+// Create a new client instance
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+  ],
+});
+
+client.commands = new Collection();
+
+const commandsPath = path.join(__dirname, "Commands");
+const commandFiles = fs
+  .readdirSync(commandsPath)
+  .filter((file) => file.endsWith(".js"));
+
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = require(filePath);
+  // Set a new item in the Collection with the key as the command name and the value as the exported module
+  if ("data" in command && "execute" in command) {
+    client.commands.set(command.data.name, command);
+  } else {
+    console.log(
+      `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+    );
+  }
+}
+
+// When the client is ready, run this code (only once)
+// We use 'c' for the event parameter to keep it separate from the already defined 'client'
+client.once(Events.ClientReady, (c) => {
+  console.log(`Ready! Logged in as ${c.user.tag}`);
+});
+
+client.on(Events.InteractionCreate, async (interaction) => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const command = interaction.client.commands.get(interaction.commandName);
+
+  if (!command) {
+    console.error(`No command matching ${interaction.commandName} was found.`);
+    return;
   }
 
-  const rest = new REST({ version: "9" }).setToken(token); // Define "rest" for use in registering commands
-  // Register slash commands.
-  ;(async () => {
-    try {
-      console.log("Started refreshing application (/) commands.");
-
-      await rest.put(Routes.applicationCommands(client.user.id), {
-        body: commandarray,
-      });
-
-      console.log("Successfully reloaded application (/) commands.");
-    } catch (error) {
-      console.error(error);
-    }
-  })();
-  console.log(`Logged in as ${client.user.tag}!`);
-});
-// Command handler.
-client.on("interactionCreate", async interaction => {
-  if (!interaction.isCommand()) return;
-
-  const command = commands.get(interaction.commandName);
-
-  if (!command) return;
-
   try {
-    await command.execute(interaction, client);
+    await command.execute(interaction);
   } catch (error) {
     console.error(error);
-    return interaction.reply({
+    await interaction.reply({
       content: "There was an error while executing this command!",
       ephemeral: true,
     });
   }
 });
 
-client.login(token); // Login to the bot client via the defined "token" string.
+// When there is a message ping, reply with Pong!
+client.on(Events.MessageCreate, (msg) => {
+  if (msg.content === "ping") {
+    msg.reply("Pong!");
+  }
+});
+
+// Log in to Discord with your client's token
+client.login(DISCORD_CLIENT_TOKEN);
