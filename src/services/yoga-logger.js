@@ -1,7 +1,14 @@
 import { Events } from "discord.js";
-import { addDays, formatDistanceToNow } from "date-fns";
+import { addDays, format } from "date-fns";
 
 import { getXataClient } from "./../xata.js";
+
+export function truncate(str, maxLength) {
+  if (str.length > maxLength) {
+    return str.substring(0, maxLength) + "...";
+  }
+  return str;
+}
 
 export function allowedMessage(message) {
   const isNotBot = !message.author.bot;
@@ -40,18 +47,16 @@ export async function createOrUpdateYogaSession(
   const editedTimestamp = message.editedTimestamp
     ? new Date(message.editedTimestamp)
     : null;
-  let logDate = creationDate;
+  let logTimestamp = creationDate;
 
   if (!isNaN(timeShiftNumber)) {
-    logDate = addDays(logDate, timeShiftNumber);
+    logTimestamp = addDays(logTimestamp, timeShiftNumber);
   }
 
   // Create reply content
-  const readableData = formatDistanceToNow(logDate, {
-    addSuffix: true,
-  });
-  const replyContent = `Logged your ${readableData} yoga session${
-    description && ": " + description
+  const readableData = format(logTimestamp, "EEEE");
+  let replyContent = `☑️ ${readableData} logged${
+    description && ": " + truncate(description, 35)
   }`;
 
   // Get record if exists
@@ -73,7 +78,8 @@ export async function createOrUpdateYogaSession(
     id: message.id,
     createdTimestamp: creationDate,
     editedTimestamp: editedTimestamp,
-    logDate: logDate,
+    logTimestamp: logTimestamp,
+    logDateString: format(logTimestamp, "yyyy-MM-dd"),
     description: description,
     discordUserId: message.author.id,
     replyId: replyId,
