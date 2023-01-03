@@ -25,9 +25,11 @@ export function allowedMessage(message) {
 
 export async function createOrUpdateYogaSession(
   message,
-  xataClient = getXataClient()
+  xata = getXataClient()
 ) {
   // console.log({ message });
+
+  const discordUserId = message.author.id;
 
   if (!allowedMessage(message)) return;
 
@@ -53,14 +55,36 @@ export async function createOrUpdateYogaSession(
     logTimestamp = addDays(logTimestamp, timeShiftNumber);
   }
 
+  const logDateString = format(logTimestamp, "yyyy-MM-dd");
+
+  // Get the number of days so far
+  const result = await xata.db.log.aggregate(
+    {
+      daysOfYoga: {
+        uniqueCount: {
+          column: "logDateString",
+        },
+      },
+    },
+    {
+      discordUserId: discordUserId,
+      logDateString: {
+        $not: [logDateString],
+      },
+    }
+  );
+
+  const daysOfYoga = result.aggs.daysOfYoga;
+
   // Create reply content
   const readableData = format(logTimestamp, "EEEE");
   let replyContent = `☑️ ${readableData} logged${
     description && ": " + truncate(description, 35)
   }`;
+  replyContent += `\n📊 ${daysOfYoga + 1} days logged`;
 
   // Get record if exists
-  const existingRecord = await xataClient.db.log.read(message.id);
+  const existingRecord = await xata.db.log.read(message.id);
   let replyId = existingRecord?.replyId;
 
   if (!replyId) {
@@ -74,14 +98,14 @@ export async function createOrUpdateYogaSession(
   }
 
   // Save to Xata
-  const record = await xataClient.db.log.createOrUpdate({
+  const record = await xata.db.log.createOrUpdate({
     id: message.id,
     createdTimestamp: creationDate,
     editedTimestamp: editedTimestamp,
     logTimestamp: logTimestamp,
-    logDateString: format(logTimestamp, "yyyy-MM-dd"),
+    logDateString: logDateString,
     description: description,
-    discordUserId: message.author.id,
+    discordUserId: discordUserId,
     replyId: replyId,
   });
 
@@ -94,13 +118,13 @@ export async function createOrUpdateYogaSession(
   await message.react("🏴‍☠️");
 }
 
-export async function deleteYogaSession(message, xataClient = getXataClient()) {
+export async function deleteYogaSession(message, xata = getXataClient()) {
   // console.log({ message });
 
   if (!allowedMessage(message)) return;
 
   // Get record if exists
-  const existingRecord = await xataClient.db.log.read(message.id);
+  const existingRecord = await xata.db.log.read(message.id);
   const replyId = existingRecord?.replyId;
 
   if (replyId) {
@@ -110,7 +134,7 @@ export async function deleteYogaSession(message, xataClient = getXataClient()) {
   }
 
   // Save to Xata
-  const record = await xataClient.db.log.delete(message.id);
+  const record = await xata.db.log.delete(message.id);
 
   console.log(">>>>>>> Deleted record", record.id);
 }
