@@ -20,10 +20,16 @@ const tables = [
         defaultValue: "2021-04-01T18:46:52.292Z",
       },
       {
-        name: "logDate",
+        name: "logTimestamp",
         type: "datetime",
         notNull: true,
         defaultValue: "2021-01-01T18:47:57.127Z",
+      },
+      {
+        name: "logDateString",
+        type: "string",
+        notNull: true,
+        defaultValue: "",
       },
       { name: "editedTimestamp", type: "datetime" },
     ],
