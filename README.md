@@ -1,29 +1,21 @@
----
-title: Discord bot
-description: A Discord bot written in JavaScript
-tags:
-  - discord.js
-  - javascript
----
+# Yoga Pirates Discord.js Bot
 
-# Discord.js Example
+A bot to save yoga sessions to [Xata](https://xata.io/?utm_source=github&utm_campaign=yoga+pirates&utm_medium=readme) using Discord messages.
 
-This example starts a Discord bot using [discord.js](https://discord.js.org/#/).
+## ✅ How to log
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template/jX0xQo)
+Write a log message in the #yoga channel.
 
-## ✨ Features
+- `✅ Center Day 6 - Good session` // Save a record to Xata with date = now and note = "Center Day 6 - Good session"
+- `✅-1 Extra evening Session` // Save a record to Xata with date = now - 24 hours day and note = "Extra evening Session"
 
-- Discord.js
-- JavaScript
 
-## 💁‍♀️ How to use
+## 💁‍♀️ How to dev
 
+- Get env variables from @raae
 - Install dependencies `yarn`
-- Connect to your Railway project `railway link`
-- Start the bot `railway run yarn dev`
+- Start the bot `yarn dev`
 
-## 📝 Notes
+## 👑 Stay updated
 
-- To create a new command, just create a file in the `Commands` directory. You can take a look at the `Template.js` file for an example of what commands should look like. For any additional help see the [discord.js guide](https://discordjs.guide).
-- If you need any additional help with this, join our [Discord server](https://discord.gg/railway) and create a thread in the project help channel.
+Stay updated about side projects and other shenanigans from Queen Raae (and her piratical family) by [subscribing](https://queen.raae.codes/emails/?utm_source=github&utm_campaign=yoga+pirates&utm_medium=readme) to our newsletter.
