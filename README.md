@@ -16,6 +16,10 @@ Write a log message in the #yoga channel.
 - Install dependencies `yarn`
 - Start the bot `yarn dev`
 
+## 🤖 How to deploy
+
+- Need to run `node ./src/deploy-commands.js` to deploy the slash commands to all connected Discord servers.
+
 ## 👑 Stay updated
 
 Stay updated about side projects and other shenanigans from Queen Raae (and her piratical family) by [subscribing](https://queen.raae.codes/emails/?utm_source=github&utm_campaign=yoga+pirates&utm_medium=readme) to our newsletter.
