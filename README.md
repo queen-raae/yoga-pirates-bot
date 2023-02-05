@@ -9,7 +9,6 @@ Write a log message in the #yoga channel.
 - `✅ Center Day 6 - Good session` // Save a record to Xata with date = now and note = "Center Day 6 - Good session"
 - `✅-1 Extra evening Session` // Save a record to Xata with date = now - 24 hours day and note = "Extra evening Session"
 
-
 ## 💁‍♀️ How to dev
 
 - Get env variables from @raae
