@@ -15,6 +15,11 @@ Write a log message in the #yoga channel.
 - Get env variables from @raae
 - Install dependencies `yarn`
 - Start the bot `yarn dev`
+- Start the bot with `DEPLOY_COMMANDS=true` set to deploy commands, but do not do this on every code change.
+
+## 🤖 How to deploy
+
+- Set environment variable `DEPLOY_COMMANDS=true` to automatically deploy the commands on start.
 
 ## 👑 Stay updated
 
