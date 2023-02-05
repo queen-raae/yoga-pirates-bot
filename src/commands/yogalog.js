@@ -10,7 +10,7 @@ export default {
 
     const results = await xata.db.session
       .filter({discordUserId: discordUserId})
-      .getMany();
+      .getAll();
 
     let output = `Days of yoga: ${results.length}\n`
     output += results.map(row => `- ${row.sessionDateString}: ${row.note}`).join("\n")
