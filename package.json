@@ -7,8 +7,8 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch .",
-    "start": "node .",
-    "deploy": "node src/deploy-commands"
+    "start": "node src/deploy-commands & node .",
+    "deploy-commands": "node src/deploy-commands"
   },
   "dependencies": {
     "@xata.io/client": "0.21.6",
