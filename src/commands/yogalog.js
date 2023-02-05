@@ -55,6 +55,6 @@ export default {
     }
     output += results.map(row => `- ${row.sessionDateString}: ${row.note}`).join("\n")
 
-    await interaction.reply(output);
+    await interaction.reply({ content: output, ephemeral: true});
   },
 };
