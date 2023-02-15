@@ -12,6 +12,7 @@ import { DISCORD_CLIENT_ID, DISCORD_CLIENT_TOKEN } from "./config.js";
 
 import yogaLogger from "./services/yoga-logger.js";
 import yogalog from "./commands/yogalog.js";
+import settings from "./commands/settings.js";
 
 // Create a new discord client instance
 const discordClient = new Client({
@@ -23,8 +24,12 @@ const discordClient = new Client({
   ],
 });
 
+const commands = [yogalog, settings];
+
 discordClient.commands = new Collection();
-discordClient.commands.set(yogalog.data.name, yogalog);
+commands.forEach((command) =>
+  discordClient.commands.set(command.data.name, command)
+);
 
 // It is too much for Discord to deploy every time the code is changed
 if (process.env.DEPLOY_COMMANDS === "true") {
@@ -32,17 +37,16 @@ if (process.env.DEPLOY_COMMANDS === "true") {
   const rest = new REST({ version: "10" }).setToken(DISCORD_CLIENT_TOKEN);
 
   try {
-    const commands = [yogalog.data.toJSON()];
-    console.log(
-      `Started refreshing ${commands.length} application (/) commands.`
-    );
+    console.log(`Started refreshing application (/) commands.`);
 
     // The put method is used to fully refresh all commands in the guild with the current set
     const data = await rest.put(Routes.applicationCommands(DISCORD_CLIENT_ID), {
-      body: commands,
+      body: commands.map((command) => command.data.toJSON()),
     });
 
-    console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+    console.log(
+      `Successfully reloaded ${data.length} application (/) commands.`
+    );
   } catch (error) {
     // And of course, make sure you catch and log any errors!
     console.error(error);
