@@ -12,7 +12,7 @@ export function truncate(str, maxLength) {
 
 export function allowedMessage(message) {
   const isNotBot = !message.author.bot;
-  const inYogaChannel = message.channel.name.toLowerCase() === "yoga";
+  const inYogaChannel = message.channel?.name?.toLowerCase() === "yoga";
   const startsWithCheckMark = message.content.trim().startsWith("✅");
 
   const isAllowed = isNotBot && inYogaChannel && startsWithCheckMark;
@@ -27,8 +27,6 @@ export async function createOrUpdateYogaSession(
   message,
   xata = getXataClient()
 ) {
-
-
   if (!allowedMessage(message)) return;
 
   const messageContent = message.content.trim();
@@ -156,7 +154,9 @@ export default (discordClient) => {
     const command = interaction.client.commands.get(interaction.commandName);
 
     if (!command) {
-      console.error(`No command matching ${interaction.commandName} was found.`);
+      console.error(
+        `No command matching ${interaction.commandName} was found.`
+      );
       return;
     }
 
