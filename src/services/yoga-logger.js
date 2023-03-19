@@ -3,19 +3,44 @@ import { addDays, format } from "date-fns";
 
 import { getXataClient } from "./../xata.js";
 
-export function truncate(str, maxLength) {
+const ALLOWED_CHANNELS = ["yoga", "exercise"];
+
+function truncate(str, maxLength) {
   if (str.length > maxLength) {
     return str.substring(0, maxLength) + "...";
   }
   return str;
 }
 
-export function allowedMessage(message) {
+// Calculate the number of days with yoga sessions
+async function daysOfYoga(xata, discordUserId, sessionDateString) {
+  const result = await xata.db.session.aggregate(
+    {
+      daysOfYoga: {
+        uniqueCount: {
+          column: "sessionDateString",
+        },
+      },
+    },
+    {
+      discordUserId: discordUserId,
+      exercise: "yoga",
+      sessionDateString: {
+        $not: [sessionDateString],
+      },
+    }
+  );
+
+  return result.aggs.daysOfYoga;
+}
+
+function allowedMessage(message) {
   const isNotBot = !message.author.bot;
-  const inYogaChannel = message.channel?.name?.toLowerCase() === "yoga";
+  const channel = message.channel?.name?.toLowerCase();
   const startsWithCheckMark = message.content.trim().startsWith("✅");
 
-  const isAllowed = isNotBot && inYogaChannel && startsWithCheckMark;
+  const isAllowed =
+    isNotBot && ALLOWED_CHANNELS.includes(channel) && startsWithCheckMark;
   if (isAllowed) {
     console.log(">>>>>>> allowedMessage", message.content);
   }
@@ -23,14 +48,12 @@ export function allowedMessage(message) {
   return isAllowed;
 }
 
-export async function createOrUpdateYogaSession(
-  message,
-  xata = getXataClient()
-) {
+async function createOrUpdateSession(message, xata = getXataClient()) {
   if (!allowedMessage(message)) return;
 
   const messageContent = message.content.trim();
   const discordUserId = message.author.id;
+  const channel = message.channel?.name?.toLowerCase();
 
   // This should be "✅" or "✅-3" etc
   const sessionContent = messageContent.split(" ")[0];
@@ -54,31 +77,16 @@ export async function createOrUpdateYogaSession(
 
   const sessionDateString = format(sessionTimestamp, "yyyy-MM-dd");
 
-  // Get the number of days so far
-  const result = await xata.db.session.aggregate(
-    {
-      daysOfYoga: {
-        uniqueCount: {
-          column: "sessionDateString",
-        },
-      },
-    },
-    {
-      discordUserId: discordUserId,
-      sessionDateString: {
-        $not: [sessionDateString],
-      },
-    }
-  );
-
-  const daysOfYoga = result.aggs.daysOfYoga;
-
   // Create reply content
   const readableData = format(sessionTimestamp, "EEEE");
   let replyContent = `☑️ ${readableData} logged${
     note && ": " + truncate(note, 35)
   }`;
-  replyContent += `\n📊 ${daysOfYoga + 1} days logged`;
+
+  if (channel === "yoga") {
+    const days = await daysOfYoga(xata, discordUserId, sessionDateString);
+    replyContent += `\n📊 ${days + 1} days of yoga logged`;
+  }
 
   // Get record if exists
   const existingRecord = await xata.db.session.read(message.id);
@@ -104,6 +112,7 @@ export async function createOrUpdateYogaSession(
     note: note,
     discordUserId: discordUserId,
     replyId: replyId,
+    exercise: channel,
   });
 
   if (existingRecord) {
@@ -115,7 +124,7 @@ export async function createOrUpdateYogaSession(
   await message.react("🏴‍☠️");
 }
 
-export async function deleteYogaSession(message, xata = getXataClient()) {
+async function deleteSession(message, xata = getXataClient()) {
   if (!allowedMessage(message)) return;
 
   // Get record if exists
@@ -137,15 +146,17 @@ export async function deleteYogaSession(message, xata = getXataClient()) {
 export default (discordClient) => {
   discordClient.on(Events.MessageCreate, (message) => {
     console.log(">>>>> YogaLogger", Events.MessageCreate);
-    createOrUpdateYogaSession(message);
+    createOrUpdateSession(message);
   });
+
   discordClient.on(Events.MessageUpdate, (_message, updated) => {
     console.log(">>>>> YogaLogger", Events.MessageUpdate);
-    createOrUpdateYogaSession(updated);
+    createOrUpdateSession(updated);
   });
+
   discordClient.on(Events.MessageDelete, (message) => {
     console.log(">>>>> YogaLogger", Events.MessageDelete);
-    deleteYogaSession(message);
+    deleteSession(message);
   });
 
   discordClient.on(Events.InteractionCreate, async (interaction) => {

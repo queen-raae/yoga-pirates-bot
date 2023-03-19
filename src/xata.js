@@ -33,8 +33,10 @@ const tables = [
         defaultValue: "",
       },
       { name: "replyId", type: "string" },
+      { name: "exercise", type: "string", notNull: true, defaultValue: "yoga" },
     ],
   },
+  { name: "yogis", columns: [{ name: "timezone", type: "string" }] },
 ];
 /** @type { import('../../client/src').ClientConstructor<{}> } */
 const DatabaseClient = buildClient();
