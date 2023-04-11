@@ -42,6 +42,21 @@ declare const tables: readonly [
       {
         readonly name: "replyId";
         readonly type: "string";
+      },
+      {
+        readonly name: "exercise";
+        readonly type: "string";
+        readonly notNull: true;
+        readonly defaultValue: "yoga";
+      }
+    ];
+  },
+  {
+    readonly name: "yogis";
+    readonly columns: readonly [
+      {
+        readonly name: "timezone";
+        readonly type: "string";
       }
     ];
   }
@@ -50,8 +65,11 @@ export type SchemaTables = typeof tables;
 export type InferredTypes = SchemaInference<SchemaTables>;
 export type Session = InferredTypes["session"];
 export type SessionRecord = Session & XataRecord;
+export type Yogis = InferredTypes["yogis"];
+export type YogisRecord = Yogis & XataRecord;
 export type DatabaseSchema = {
   session: SessionRecord;
+  yogis: YogisRecord;
 };
 declare const DatabaseClient: any;
 export declare class XataClient extends DatabaseClient<DatabaseSchema> {
