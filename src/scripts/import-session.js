@@ -1,4 +1,4 @@
-import { getXataClient } from "./../xata.js";
+import { getXataClient } from "../xata.js";
 import { readFileSync } from "fs";
 import * as dotenv from "dotenv";
 dotenv.config();
