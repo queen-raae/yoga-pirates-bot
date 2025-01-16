@@ -1,7 +1,8 @@
 import { Events } from "discord.js";
 import { addDays, format } from "date-fns";
+import Database from "better-sqlite3";
 
-import { getXataClient } from "./../xata.js";
+const db = new Database(process.env.DATABASE_PATH);
 
 const ALLOWED_CHANNELS = ["yoga", "exercise"];
 
@@ -12,26 +13,47 @@ function truncate(str, maxLength) {
   return str;
 }
 
-// Calculate the number of days with yoga sessions
-async function daysOfYoga(xata, discordUserId, sessionDateString) {
-  const result = await xata.db.session.aggregate(
-    {
-      daysOfYoga: {
-        uniqueCount: {
-          column: "sessionDateString",
-        },
-      },
-    },
-    {
-      discordUserId: discordUserId,
-      exercise: "yoga",
-      sessionDateString: {
-        $not: [sessionDateString],
-      },
-    }
-  );
+const daysOfYogaStatement = db.prepare(`
+  SELECT COUNT(DISTINCT sessionDateString) AS daysOfYoga
+  FROM session
+  WHERE 
+    discordUserId = ? AND 
+    exercise = 'yoga' AND
+    sessionDateString != ?
+`);
 
-  return result.aggs.daysOfYoga;
+const getSessionStatement = db.prepare(`
+  SELECT *
+  FROM session
+  WHERE
+    id = ?
+`);
+
+const deleteSessionStatement = db.prepare(`
+  DELETE FROM session
+  WHERE
+    id = ?
+`);
+
+const createOrUpdateSessionStatement = db.prepare(`
+  INSERT OR REPLACE INTO session (
+    id,
+    createdTimestamp,
+    editedTimestamp,
+    sessionTimestamp,
+    sessionDateString,
+    note,
+    discordUserId,
+    replyId,
+    exercise
+  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+`);
+
+// Calculate the number of days with yoga sessions
+async function daysOfYoga(discordUserId, sessionDateString) {
+  const result = daysOfYogaStatement.get(discordUserId, sessionDateString);
+
+  return result.daysOfYoga;
 }
 
 function allowedMessage(message) {
@@ -48,7 +70,7 @@ function allowedMessage(message) {
   return isAllowed;
 }
 
-async function createOrUpdateSession(message, xata = getXataClient()) {
+async function createOrUpdateSession(message) {
   if (!allowedMessage(message)) return;
 
   const messageContent = message.content.trim();
@@ -84,12 +106,12 @@ async function createOrUpdateSession(message, xata = getXataClient()) {
   }`;
 
   if (channel === "yoga") {
-    const days = await daysOfYoga(xata, discordUserId, sessionDateString);
+    const days = await daysOfYoga(discordUserId, sessionDateString);
     replyContent += `\n📊 ${days + 1} days of yoga logged`;
   }
 
   // Get record if exists
-  const existingRecord = await xata.db.session.read(message.id);
+  const existingRecord = getSessionStatement.get(message.id);
   let replyId = existingRecord?.replyId;
 
   if (!replyId) {
@@ -102,33 +124,33 @@ async function createOrUpdateSession(message, xata = getXataClient()) {
     await existingReply.edit(replyContent);
   }
 
-  // Save to Xata
-  const record = await xata.db.session.createOrUpdate({
-    id: message.id,
-    createdTimestamp: creationDate,
-    editedTimestamp: editedTimestamp,
-    sessionTimestamp: sessionTimestamp,
-    sessionDateString: sessionDateString,
-    note: note,
-    discordUserId: discordUserId,
-    replyId: replyId,
-    exercise: channel,
-  });
+  // Save to database
+  const result = createOrUpdateSessionStatement.run(
+    message.id,
+    creationDate.toISOString(),
+    editedTimestamp?.toISOString(),
+    sessionTimestamp.toISOString(),
+    sessionDateString,
+    note,
+    discordUserId,
+    replyId,
+    channel
+  );
 
   if (existingRecord) {
-    console.log(">>>>>>> Updated record", record.id);
+    console.log(">>>>>>> Updated record", result.lastInsertRowid);
   } else {
-    console.log(">>>>>>> Created record", record.id);
+    console.log(">>>>>>> Created record", result.lastInsertRowid);
   }
 
   await message.react("🏴‍☠️");
 }
 
-async function deleteSession(message, xata = getXataClient()) {
+async function deleteSession(message) {
   if (!allowedMessage(message)) return;
 
   // Get record if exists
-  const existingRecord = await xata.db.session.read(message.id);
+  const existingRecord = getSessionStatement.get(message.id);
   const replyId = existingRecord?.replyId;
 
   if (replyId) {
@@ -137,10 +159,10 @@ async function deleteSession(message, xata = getXataClient()) {
     await existingReply.delete();
   }
 
-  // Save to Xata
-  const record = await xata.db.session.delete(message.id);
+  // Save to database
+  const result = deleteSessionStatement.run(message.id);
 
-  console.log(">>>>>>> Deleted record", record.id);
+  console.log(">>>>>>> Deleted record", result.lastInsertRowid);
 }
 
 export default (discordClient) => {

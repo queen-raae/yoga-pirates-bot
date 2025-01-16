@@ -1,5 +1,27 @@
 import { SlashCommandBuilder } from "discord.js";
+import Database from "better-sqlite3";
 import { getXataClient } from "./../xata.js";
+
+const db = new Database(process.env.DATABASE_PATH);
+
+const sessionsStatement = db.prepare(`
+  SELECT *
+  FROM session
+  WHERE 
+    discordUserId = ? AND
+    exercise = 'yoga'
+  ORDER BY sessionTimestamp ASC
+`);
+
+const sessionsStatementPeriod = db.prepare(`
+  SELECT *
+  FROM session
+  WHERE 
+    discordUserId = ? AND 
+    sessionTimestamp > ? AND
+    exercise = 'yoga'
+  ORDER BY sessionTimestamp ASC
+`);
 
 export default {
   data: new SlashCommandBuilder()
@@ -28,11 +50,9 @@ export default {
 
   async execute(interaction, xata = getXataClient()) {
     const discordUserId = interaction.user.id;
-    const period = interaction.options.getString("period");
+    const period = interaction.options.getString("period");s
 
-    let results = await xata.db.session.filter({
-      discordUserId: discordUserId,
-    });
+    let results = null;
 
     if (period) {
       const start = new Date();
@@ -47,10 +67,11 @@ export default {
           start.setFullYear(start.getFullYear() - 1);
           break;
       }
-      results = results.filter({ sessionTimestamp: { $gt: start } });
+      results = sessionsStatementPeriod.all(discordUserId, start.toISOString());
+    } else {
+      results = sessionsStatement.all(discordUserId);
     }
 
-    results = await results.sort("sessionTimestamp", "asc").getAll();
     let header = `Days of yoga: ${results.length}\n`;
     if (period) {
       header += `Period: ${period}\n`;

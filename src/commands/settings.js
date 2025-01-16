@@ -1,5 +1,13 @@
 import { SlashCommandBuilder } from "discord.js";
-import { getXataClient } from "../xata.js";
+import Database from "better-sqlite3";
+const db = new Database(process.env.DATABASE_PATH);
+
+const createOrUpdateStatement = db.prepare(`
+  INSERT OR REPLACE INTO yogis (
+    id,
+    timezone
+  ) VALUES (?, ?)
+`);
 
 export default {
   data: new SlashCommandBuilder()
@@ -19,12 +27,9 @@ export default {
     const timezone = interaction.options.getString("timezone");
 
     if (Intl.supportedValuesOf("timeZone").includes(timezone)) {
-      const record = await xata.db.yogis.createOrUpdate({
-        id: discordUserId,
-        timezone: timezone,
-      });
+      const result = createOrUpdateStatement.run(discordUserId, timezone);
 
-      console.log(">>>>>>> Updated settings for", record.id);
+      console.log(">>>>>>> Updated settings for", record.lastInsertRowid);
 
       await interaction.reply({
         content: "Timezone was stored",
