@@ -1,6 +1,5 @@
 import { SlashCommandBuilder } from "discord.js";
 import Database from "better-sqlite3";
-import { getXataClient } from "./../xata.js";
 
 const db = new Database(process.env.DATABASE_PATH);
 
@@ -48,9 +47,9 @@ export default {
         )
     ),
 
-  async execute(interaction, xata = getXataClient()) {
+  async execute(interaction) {
     const discordUserId = interaction.user.id;
-    const period = interaction.options.getString("period");s
+    const period = interaction.options.getString("period");
 
     let results = null;
 

@@ -22,7 +22,7 @@ export default {
         .setRequired(false)
     ),
 
-  async execute(interaction, xata = getXataClient()) {
+  async execute(interaction) {
     const discordUserId = interaction.user.id;
     const timezone = interaction.options.getString("timezone");
 
