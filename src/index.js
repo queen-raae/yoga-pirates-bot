@@ -13,6 +13,7 @@ import { DISCORD_CLIENT_ID, DISCORD_CLIENT_TOKEN } from "./config.js";
 import yogaLogger from "./services/yoga-logger.js";
 import yogalog from "./commands/yogalog.js";
 import settings from "./commands/settings.js";
+import backup from "./commands/backup.js";
 
 // Create a new discord client instance
 const discordClient = new Client({
@@ -24,7 +25,7 @@ const discordClient = new Client({
   ],
 });
 
-const commands = [yogalog, settings];
+const commands = [yogalog, settings, backup];
 
 discordClient.commands = new Collection();
 commands.forEach((command) =>

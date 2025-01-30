@@ -12,3 +12,11 @@ console.log("number of sessions", records.length);
 const recordsAsString = JSON.stringify(records);
 
 writeFileSync("sessions.json", recordsAsString);
+
+const yogis = await xata.db.yogis.getAll();
+
+console.log("number of yogis", yogis.length);
+
+const yogisAsString = JSON.stringify(yogis);
+
+writeFileSync("yogis.json", yogisAsString);
