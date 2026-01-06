@@ -144,6 +144,10 @@ async function createOrUpdateSession(message) {
   }
 
   await message.react("🏴‍☠️");
+
+  if (channel === "yoga" && /\byyhp\b/i.test(messageContent)) {
+    await message.react("🐐");
+  }
 }
 
 async function deleteSession(message) {
